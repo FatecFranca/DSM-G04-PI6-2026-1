@@ -77,7 +77,9 @@ Este repositório contém o projeto **Nação Nutrida**, uma plataforma digital 
 ### Arquitetura em Camadas:
 - **Front-End**: React (Web) e Flutter (Mobile) com state management (Context API / Provider)
 - **Back-End**: Node.js + Express + TypeScript com arquitetura MVC
+- **Mensageria**: Azure Service Bus (fila `fila1`) para processamento assíncrono de doações e encerramento automático de campanhas
 - **Banco de Dados**: MongoDB com Prisma ORM
+- **Infraestrutura**: API hospedada em VM da Azure; mineração de dados em Python (Apriori)
 
 ## Estrutura Inicial do Back-End e Front-End
 
@@ -105,7 +107,8 @@ server/
 #### Funcionalidades por Módulo:
 - **Usuário**: Registro, login (JWT), atualização, busca de admins
 - **Campanha**: CRUD completo, busca por localização, filtros, encerramento automático ao atingir meta
-- **Doação**: Registro de doações, histórico do usuário
+- **Doação**: Registro de doações, histórico do usuário; publica evento na fila do Azure Service Bus
+- **Mensageria**: Consumidor do Service Bus que recalcula o progresso e encerra a campanha automaticamente ao atingir as metas
 - **Alimento**: Listagem de alimentos cadastrados
 - **Chat**: Conversas e mensagens entre usuários
 - **Localidade**: Integração com IBGE API para busca de cidades
@@ -166,23 +169,34 @@ Relacionamentos:
 - **conversation** e **message**: Sistema de chat
 
 **Exemplo de Schema (Prisma):**
+
+> No MongoDB, os relacionamentos entre usuário/campanha/doação são feitos por referência de `ObjectId` (sem `@relation` declarado entre essas coleções); as agregações são resolvidas na camada de serviço.
+
 ```prisma
-model Usuario {
-  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
-  nm_usuario           String
-  tipo_usuario         String
+model usuario {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  nm_usuario        String
+  tipo_usuario      String?
+  cd_email_usuario  String
+  cd_senha_usuario  String
+  fg_admin          Int     @default(0)
   // ... outros campos
-  campanhas            Campanha[]
-  doacoes              AlimentoDoacao[]
 }
 
-model Campanha {
-  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
-  usuario_id           String   @db.ObjectId
-  usuario              Usuario  @relation(fields: [usuario_id], references: [id])
+model campanha {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  usuario_id         String   @db.ObjectId
+  nm_titulo_campanha String
+  fg_campanha_ativa  Boolean
   // ... outros campos
-  alimentos            AlimentoCampanha[]
-  doacoes              AlimentoDoacao[]
+}
+
+model alimento_doacao {
+  id                String @id @default(auto()) @map("_id") @db.ObjectId
+  usuario_id        String @db.ObjectId
+  alimento_id       String @db.ObjectId
+  campanha_id       String @db.ObjectId
+  qt_alimento_doado Int
 }
 ```
 

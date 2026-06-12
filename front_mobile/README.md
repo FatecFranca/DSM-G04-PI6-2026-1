@@ -167,9 +167,12 @@ flutter --version
 
 3. **Configure a URL do back-end**
 
-   Edite [lib/config/api.dart](lib/config/api.dart) e ajuste `baseUrl` para o endereço do servidor:
+   Edite [lib/config/api.dart](lib/config/api.dart) e ajuste `baseUrl` para o endereço do servidor (a API roda na porta **5000**):
    ```dart
-   static const String baseUrl = 'http://SEU_IP:3000';
+   // Servidor remoto (VM Azure) — valor atual
+   static const String baseUrl = 'http://20.15.107.242:5000/api';
+   // Emulador Android: 'http://10.0.2.2:5000/api'
+   // Local (web/desktop): 'http://localhost:5000/api'
    ```
 
 4. **Execute em modo de desenvolvimento**

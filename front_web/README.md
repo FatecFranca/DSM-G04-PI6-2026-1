@@ -172,10 +172,11 @@ npm >= 9.x
 
 3. **Configure a URL do back-end**
 
-   Ajuste o proxy em `package.json` ou crie um arquivo `.env` na raiz do `front_web`:
-   ```env
-   REACT_APP_API_URL=http://localhost:3000
+   Ajuste o `proxy` em `package.json` (a API roda na porta **5000**). Atualmente aponta para a VM da Azure:
+   ```json
+   "proxy": "http://20.15.107.242:5000"
    ```
+   Para desenvolvimento local, troque por `http://localhost:5000`.
 
 4. **Execute em modo de desenvolvimento**
    ```bash
